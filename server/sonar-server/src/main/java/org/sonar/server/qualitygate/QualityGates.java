@@ -22,6 +22,7 @@ package org.sonar.server.qualitygate;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import org.apache.commons.lang.StringUtils;
 import org.sonar.api.web.UserRole;
@@ -127,6 +128,15 @@ public class QualityGates {
       setDefault(dbSession, idToUseAsDefault);
       dbSession.commit();
     }
+  }
+
+  @CheckForNull
+  public QualityGateDto getDefault(DbSession dbSession) {
+    Long defaultId = getDefaultId();
+    if (defaultId == null) {
+      return null;
+    }
+    return dao.selectById(dbSession, defaultId);
   }
 
   public void dissociateProject(DbSession dbSession, ComponentDto project) {
