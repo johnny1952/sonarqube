@@ -221,13 +221,9 @@ export default class App extends React.PureComponent<Props, State> {
   }
 
   updateLocationQuery = (newQuery: RawQuery) => {
-    this.context.router.push({
-      pathname: this.props.location.pathname,
-      query: {
-        ...this.props.location.query,
-        ...newQuery
-      }
-    });
+    // omit `null`, `undefined` and empty string
+    const query = omitBy({ ...this.props.location.query, ...newQuery }, x => !x);
+    this.context.router.push({ pathname: this.props.location.pathname, query });
   };
 
   handleClearAll = () => {
@@ -276,9 +272,9 @@ export default class App extends React.PureComponent<Props, State> {
         <div className="layout-page-main-inner">
           <PageHeader
             currentUser={this.props.currentUser}
-            getFilterUrl={this.getFilterUrl}
             loading={this.state.loading}
             onPerspectiveChange={this.handlePerspectiveChange}
+            onQueryChange={this.updateLocationQuery}
             onSortChange={this.handleSortChange}
             organization={this.props.organization}
             projects={this.state.projects}
