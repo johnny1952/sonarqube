@@ -20,10 +20,14 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
+import { omitBy, isNil, each } from 'lodash';
 import PageHeader from './PageHeader';
 import ProjectsList from './ProjectsList';
 import PageSidebar from './PageSidebar';
 import Visualizations from '../visualizations/Visualizations';
+import { Project, Facets } from '../types';
+import { fetchProjects, parseSorting, SORTING_SWITCH } from '../utils';
+import { parseUrlQuery, Query } from '../query';
 import { isLoggedInUser, CurrentUser } from '../../../app/types';
 import handleRequiredAuthentication from '../../../app/utils/handleRequiredAuthentication';
 import ScreenPositionHelper from '../../../components/common/ScreenPositionHelper';
@@ -32,9 +36,6 @@ import { translate } from '../../../helpers/l10n';
 import * as storage from '../../../helpers/storage';
 import { RawQuery } from '../../../helpers/query';
 import '../styles.css';
-import { Project, Facets } from '../types';
-import { fetchProjects, parseSorting, SORTING_SWITCH } from '../utils';
-import { parseUrlQuery, Query } from '../query';
 
 interface Props {
   isFavorite: boolean;
@@ -229,6 +230,24 @@ export default class App extends React.PureComponent<Props, State> {
     });
   };
 
+  handleClearAll = () => {
+    this.context.router.push({ pathname: this.props.location.pathname });
+  };
+
+  getFilterUrl = (part: RawQuery | 'clear'): { pathname: string; query?: RawQuery } => {
+    if (part === 'clear') {
+      return { pathname: this.props.location.pathname };
+    } else {
+      const query: RawQuery = omitBy({ ...this.props.location.query, ...part }, isNil);
+      each(query, (value, key) => {
+        if (Array.isArray(value)) {
+          query[key] = value.join(',');
+        }
+      });
+      return { pathname: this.props.location.pathname, query };
+    }
+  };
+
   renderSide = () => (
     <ScreenPositionHelper className="layout-page-side-outer">
       {({ top }) => (
@@ -237,7 +256,8 @@ export default class App extends React.PureComponent<Props, State> {
             <div className="layout-page-filters">
               <PageSidebar
                 facets={this.state.facets}
-                isFavorite={this.props.isFavorite}
+                getFilterUrl={this.getFilterUrl}
+                onClearAll={this.handleClearAll}
                 organization={this.props.organization}
                 query={this.state.query}
                 view={this.getView()}
@@ -256,7 +276,7 @@ export default class App extends React.PureComponent<Props, State> {
         <div className="layout-page-main-inner">
           <PageHeader
             currentUser={this.props.currentUser}
-            isFavorite={this.props.isFavorite}
+            getFilterUrl={this.getFilterUrl}
             loading={this.state.loading}
             onPerspectiveChange={this.handlePerspectiveChange}
             onSortChange={this.handleSortChange}
