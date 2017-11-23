@@ -115,7 +115,6 @@ exports[`should render \`leak\` view correctly 1`] = `
 
 exports[`should render correctly 1`] = `
 <div>
-  <FavoriteFilter />
   <div
     className="projects-facets-header clearfix"
   >
